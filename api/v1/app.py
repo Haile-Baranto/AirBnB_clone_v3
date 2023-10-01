@@ -7,8 +7,12 @@ from flask import Flask
 from flask import jsonify
 from models import storage
 from api.v1.views import app_views
+from flask_cors import CORS  # Import the CORS class
 
 app = Flask(__name__)
+
+# Configure CORS to allow requests from any origin during development
+CORS(app, resources={r"/*": {"origins": "0.0.0.0"}})
 
 
 @app.errorhandler(404)
@@ -28,4 +32,4 @@ def close_storage(exception):
 if __name__ == "__main__":
     host = os.getenv("HBNB_API_HOST", "0.0.0.0")
     port = int(os.getenv("HBNB_API_PORT", 5000))
-    app.run(host=host, port=port, threaded=True, debug=True)
+    app.run(host=host, port=port, threaded=True)
