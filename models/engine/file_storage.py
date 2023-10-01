@@ -71,27 +71,34 @@ class FileStorage:
 
     def get(self, cls, id):
         """
-        Retrieve object by class and ID.
-        Args:
-            cls: Class of the object to retrieve.
-            id: ID of the object to retrieve.
-        Returns:
-            Object with specified ID and class, or None if not found.
+        Returns the object based on the class name and its ID, or
+        None if not found
         """
-        key = "{}.{}".format(cls.__name__, id)
-        return self.__objects.get(key, None)
+        if cls not in classes.values():
+            return None
+
+        all_cls = self.all(cls)
+        for value in all_cls.values():
+            if (value.id == id):
+                return value
+
+        return None
 
     def count(self, cls=None):
-        """
-        Count objects in storage.
-        Args:
-            cls: Optional class to filter objects. If None, count all objects.
-        Returns:
-            Number of objects matching specified class or all objects.
-        """
-        if cls is not None:
-            count = sum(
-                1 for key in self.__objects if key.startswith(cls.__name__))
+        """ counts number of objects of a class in storage """
+        if cls:
+            obj_list = []
+            obj_dict = FileStorage.__objects.values()
+            for item in obj_dict:
+                if type(item).__name__ == cls:
+                    obj_list.append(item)
+            return len(obj_list)
         else:
-            count = len(self.__objects)
-        return count
+            obj_list = []
+            for class_name in classes:
+                if class_name == 'BaseModel':
+                    continue
+                obj_class = FileStorage.all(self)
+                for item in obj_class:
+                    obj_list.append(item)
+            return len(obj_list)
