@@ -4,7 +4,10 @@ Reviews view module for the API.
 """
 from api.v1.views import app_views
 from flask import Flask, jsonify, request, abort
-from models import storage, Review, Place, User
+from models import storage
+from models.review import Review
+from models.place import Place
+from models.user import User
 
 
 @app_views.route('/places/<place_id>/reviews', methods=['GET'],
