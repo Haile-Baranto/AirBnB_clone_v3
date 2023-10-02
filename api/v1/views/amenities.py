@@ -67,7 +67,7 @@ def update_amenity(amenity_id):
     """
     Updates a Amenity object by ID.
     """
-    amenity = storage.get(Amenity amenity_id)
+    amenity = storage.get(Amenity, amenity_id)
     if amenity is None:
         abort(404)
 
