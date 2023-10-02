@@ -9,6 +9,7 @@ from models.place import Place
 from models import storage
 from models.user import User
 from models.state import State
+from models.amenity import Amenity
 
 
 @app_views.route('/cities/<city_id>/places', methods=['GET'],
@@ -100,35 +101,39 @@ def places_search():
     """
     Search for Place objects based on JSON criteria.
     """
-    request_data = request.get_json()
-
-    if type(request_data) != dict:
+    data = request.get_json()
+    if type(data) != dict:
         abort(400, description="Not a JSON")
-
-    states = request_data.get('states', [])
-    cities = request_data.get('cities', [])
-    amenities = request_data.get('amenities', [])
-
+    id_states = data.get("states", [])
+    id_cities = data.get("cities", [])
+    id_amenities = data.get("amenities", [])
     places = []
+    if id_states == id_cities == []:
+        places = storage.all(Place).values()
+    else:
+        states = [
+            storage.get(State, _id) for _id in id_states
+            if storage.get(State, _id)
+        ]
+        cities = [city for state in states for city in state.cities]
+        cities += [
+            storage.get(City, _id) for _id in id_cities
+            if storage.get(City, _id)
+        ]
+        cities = list(set(cities))
+        places = [place for city in cities for place in city.places]
 
-    if states:
-        for state_id in states:
-            state = storage.get(State, state_id)
-            if state:
-                for city in state.cities:
-                    places.extend(city.places)
+    amenities = [
+        storage.get(Amenity, _id) for _id in id_amenities
+        if storage.get(Amenity, _id)
+    ]
 
-    if cities:
-        for city_id in cities:
-            city = storage.get(City, city_id)
-            if city:
-                places.extend(city.places)
+    response = []
+    for place in places:
+        response.append(place.to_dict())
+        for amenity in amenities:
+            if amenity not in place.amenities:
+                response.pop()
+                break
 
-    if amenities:
-        amenities_set = set(amenities)
-        places = [place for place in places if
-                  amenities_set.issubset(set(place.amenity_ids))]
-
-    places_list = [place.to_dict() for place in places]
-
-    return jsonify(places_list), 200
+    return jsonify(response)
