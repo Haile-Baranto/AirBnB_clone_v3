@@ -59,11 +59,13 @@ def create_city(state_id):
         abort(404)
 
     data = request.get_json()
-    if not data or 'name' not in data:
+    if type(data) != dict:
+        abort(400, description="Not a JSON")
+    if not data.get('name'):
         abort(400, description="Missing name")
 
-    data['state_id'] = state_id  # Set the state_id based on the URL parameter
     new_city = City(**data)
+    new_city.state_id = state_id
     new_city.save()
     return jsonify(new_city.to_dict()), 201
 
@@ -78,16 +80,12 @@ def update_city(city_id):
         abort(404)
 
     data = request.get_json()
-    if not data:
+    if type(data) != dict:
         abort(400, description="Not a JSON")
 
-    data.pop('id', None)
-    data.pop('state_id', None)
-    data.pop('created_at', None)
-    data.pop('updated_at', None)
-
     for key, value in data.items():
-        setattr(city, key, value)
+        if key not in ["id", "state_id", "created_at", "updated_at"]:
+            setattr(city, key, value)
 
     storage.save()
     return jsonify(city.to_dict()), 200
