@@ -8,6 +8,7 @@ from flask import Flask, jsonify, request, abort
 from models.place import Place
 from models import storage
 from models.user import User
+from models.state import State
 
 
 @app_views.route('/cities/<city_id>/places', methods=['GET'],
@@ -91,3 +92,43 @@ def update_place(place_id):
             setattr(place, key, value)
     storage.save()
     return jsonify(place.to_dict()), 200
+
+
+@app_views.route("/places_search", methods=["POST"],
+                 strict_slashes=False)
+def places_search():
+    """
+    Search for Place objects based on JSON criteria.
+    """
+    request_data = request.get_json()
+
+    if type(request_data) != dict:
+        abort(400, description="Not a JSON")
+
+    states = request_data.get('states', [])
+    cities = request_data.get('cities', [])
+    amenities = request_data.get('amenities', [])
+
+    places = []
+
+    if states:
+        for state_id in states:
+            state = storage.get(State, state_id)
+            if state:
+                for city in state.cities:
+                    places.extend(city.places)
+
+    if cities:
+        for city_id in cities:
+            city = storage.get(City, city_id)
+            if city:
+                places.extend(city.places)
+
+    if amenities:
+        amenities_set = set(amenities)
+        places = [place for place in places if
+                  amenities_set.issubset(set(place.amenity_ids))]
+
+    places_list = [place.to_dict() for place in places]
+
+    return jsonify(places_list), 200
