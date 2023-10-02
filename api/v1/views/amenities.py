@@ -76,7 +76,7 @@ def update_amenity(amenity_id):
         abort(400, description="Not a JSON")
 
     for key, value in data.items():
-        if key not in ["id", "state_id", "created_at", "updated_at"]:
+        if key not in ["id", "amenity_id", "created_at", "updated_at"]:
             setattr(Amenity, key, value)
 
     storage.save()
