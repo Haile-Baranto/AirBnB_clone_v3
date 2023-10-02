@@ -30,5 +30,5 @@ class User(BaseModel, Base):
         super().__init__(*args, **kwargs)
         if 'password' in kwargs:
             # Hash the password using MD5
-            self.password = hashlib.md5(kwargs['password'].encode()).\
-                hexdigest()
+            password_hash = hashlib.md5(kwargs['password'].encode())
+            self.password = password_hash.digest()
